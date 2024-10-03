@@ -1,15 +1,16 @@
 {
     "version": 2,
-    "rewrites": [
+    "builds": [
       {
-        "source": "/(.*)",
-        "destination": "public/js/app.js"
+        "src": "bin/www",
+        "use": "@vercel/node"
       }
     ],
-    "functions": {
-      "public/js/app.js": {
-        "memory": 256,
-        "maxDuration": 10
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "/bin/www"
       }
-    }
+    ]
   }
+  
