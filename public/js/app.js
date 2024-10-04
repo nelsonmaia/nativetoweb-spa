@@ -140,6 +140,10 @@ window.onload = async () => {
   }
 
   if(query.includes("login_token")){
+    const searchParams = new URLSearchParams(document.location.search)
+    const loginToken = searchParams.get("login_token");
+    var lead = document.getElementById("leadtext")
+    lead.innerHTML = "login_token=" + loginToken;
     return login();
   }
 
