@@ -21,7 +21,7 @@ app.get("/auth_config.json", (req, res) => {
 });
 
 // Load the private key for JWT signing
-const privateKey = fs.readFileSync(join(__dirname, 'AuthKey_SVR9K69LLW.p8'));
+const privateKey = process.env.PRIVATE_KEY;
 
 // Replace with your actual values
 const teamId = 'GCAN367Y39';
@@ -45,7 +45,7 @@ function generateJWT() {
     return token;
 }
 
-pp.post("/verify-attestation", async (req, res) => {
+app.post("/verify-attestation", async (req, res) => {
   const { keyId, attestation } = req.body;
 
   if (!keyId || !attestation) {
