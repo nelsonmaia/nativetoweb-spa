@@ -21,7 +21,7 @@ app.get("/auth_config.json", (req, res) => {
 });
 
 // Load the private key for JWT signing
-const privateKey = fs.readFileSync('AuthKey_SVR9K69LLW.p8');
+const privateKey = fs.readFileSync(join(__dirname, 'AuthKey_SVR9K69LLW.p8'));
 
 // Replace with your actual values
 const teamId = 'GCAN367Y39';
