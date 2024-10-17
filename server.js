@@ -85,7 +85,7 @@ app.get("/get-challenge", (req, res) => {
 
   // Return the hashed challenge as base64-encoded string
   res.status(200).json({
-    challenge: challenge
+    challenge: challenge.toString("base64")
   });
 });
 
