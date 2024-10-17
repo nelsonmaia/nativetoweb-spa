@@ -2,7 +2,8 @@ const express = require("express");
 const { join } = require("path");
 const morgan = require("morgan");
 const helmet = require("helmet");
-const fetch = require("node-fetch"); // Use node-fetch to send HTTP requests
+const axios = require("axios"); // Use axios for HTTP requests
+
 const app = express();
 
 // Middleware setup
@@ -26,30 +27,22 @@ app.post("/verify-attestation", async (req, res) => {
 
   try {
     // Call Apple's App Attestation service to verify the attestation
-    const appleResponse = await fetch('https://api.apple.com/appattest/v1/attestation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer YOUR_API_KEY', // Replace with your Apple API key or authentication method
-      },
-      body: JSON.stringify({
-        keyId: keyId,
-        attestation: attestation
-      })
-    });
+    // const appleResponse = await axios.post('https://api.apple.com/appattest/v1/attestation', {
+    //   keyId: keyId,
+    //   attestation: attestation
+    // }, {
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': 'Bearer YOUR_API_KEY' // Replace with your Apple API key or authentication method
+    //   }
+    // });
 
-    const verificationResult = await appleResponse.json();
+    // If the attestation is verified successfully
+    return res.status(200).json({ message: "Attestation verified", data: "appleResponse.data" });
 
-    if (appleResponse.ok) {
-      // If the attestation is verified successfully
-      return res.status(200).json({ message: "Attestation verified", data: verificationResult });
-    } else {
-      // If there's an error with Apple's verification service
-      return res.status(400).json({ message: "Attestation verification failed", error: verificationResult });
-    }
   } catch (error) {
-    console.error("Error verifying attestation:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error verifying attestation:", error.response ? error.response.data : error.message);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
 
