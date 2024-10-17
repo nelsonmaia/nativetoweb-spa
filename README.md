@@ -1,68 +1,71 @@
-# Sample 01 - Login
+# Native to Web Authentication PoC
 
-The purpose of this article is to demonstrate how simple it is to set up and use the new Single Page Application SDK, and authenticate a user in your application using Auth0's Universal Login Page.
+This repository contains a Proof of Concept (PoC) for implementing authentication that bridges native iOS apps with web applications using **Auth0**, **App Attestation**, and **OAuth token exchanges**. It includes both a native iOS app (`ios-swift-01-login`) and a JavaScript-based web app.
 
-## Running the Sample Application
+## Project Structure
 
-The sample can be run locally, by cloning the repository to your machine and then following the steps below.
+- **ios-swift-01-login**: Native iOS app demonstrating user authentication, App Attestation, and token exchanges.
+- **Web App**: JavaScript-based app that interacts with the Auth0 authorization server and validates tokens.
 
-### Specifying Auth0 Credentials
+## Key Features
 
-To specify the application client ID and domain, make a copy of `auth_config.json.example` and rename it to `auth_config.json`. Then open it in a text editor and supply the values for your application:
+- **App Attestation**: Verifies that the app running on the device is legitimate using Apple’s App Attest service.
+- **Token Exchange**: Demonstrates exchanging an ID token for a login ticket, and subsequently using the ticket to authenticate via Auth0.
+- **OAuth Authentication**: Secure login flow using Auth0, exchanging login tickets for access tokens to authenticate API requests.
 
-```json
-{
-  "domain": "n2w.test-aws-wise-mongoose-7953.auth0c.com",
-  "clientId": "mSuCvqOA01yjZ9AajnyarY9ekXeRpjcP"
-}
+## Setup
+
+### iOS App
+
+1. Open the `ios-swift-01-login` project in **Xcode**.
+2. Ensure proper signing certificates are used.
+3. Archive the app by selecting **Product > Archive**.
+4. Use **TestFlight** or export `.ipa` for manual distribution.
+
+### Web App
+
+1. Ensure the Node.js backend (e.g., `server.js`, `app.js`) is set up.
+2. Deploy the web app using **Vercel** or another hosting platform.
+
+## Running the Project
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd nativeweb-spademo
+
+## App Attestation
+
+The app uses **Apple’s App Attestation** to ensure that only valid instances of the app can communicate with the backend. This process enhances security by verifying that the app is genuine and not tampered with.
+
+### Flow:
+
+```plaintext
+NativeApp -> Backend: GET /get-challenge
+Backend --> NativeApp: challenge (random string)
+NativeApp -> Apple: Attest Key (Key ID, challenge)
+Apple --> NativeApp: attestation (signed data)
+NativeApp -> Backend: POST /verify-attestation (Key ID, attestation)
+Backend -> Apple: POST /v1/attestation (Key ID, attestation, JWT)
+Apple --> Backend: Attestation Verification Response
+Backend --> NativeApp: Verification Status
 ```
 
-### Installation
+### Explanation:
 
-After cloning the repository, run:
+1. **Challenge Generation**: 
+   The backend provides a random challenge (like a nonce) to the app. This challenge is used to ensure the app's authenticity.
 
-```bash
-$ npm install
-```
+2. **Attestation Request**: 
+   The native app generates a key and sends the challenge to Apple’s App Attestation API to validate that the app instance is genuine.
 
-This will install all of the necessary packages in order for the sample to run.
+3. **Apple Validation**: 
+   Apple returns a signed attestation if the app is valid and not tampered with.
 
-### Running the Application
+4. **Backend Verification**: 
+   The native app sends the attestation and key ID to the backend, which verifies it with Apple’s API.
 
-This version of the application uses an [Express](https://expressjs.com) server that can serve the site from a single page. To start the app from the terminal, run:
+5. **Verification Status**: 
+   The backend responds to the native app with the attestation verification status.
 
-```bash
-$ npm run dev
-```
-
-## Frequently Asked Questions
-
-We are compiling a list of questions and answers regarding the new JavaScript SDK - if you're having issues running the sample applications, [check the FAQ](https://github.com/auth0/auth0-spa-js/blob/master/FAQ.md)!
-
-## What is Auth0?
-
-Auth0 helps you to:
-
-- Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders), either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce, among others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory, ADFS or any SAML Identity Provider**.
-- Add authentication through more traditional **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
-- Add support for **[linking different user accounts](https://docs.auth0.com/link-accounts)** with the same user.
-- Support for generating signed [Json Web Tokens](https://docs.auth0.com/jwt) to call your APIs and **flow the user identity** securely.
-- Analytics of how, when and where users are logging in.
-- Pull data from other sources and add it to the user profile, through [JavaScript rules](https://docs.auth0.com/rules).
-
-## Create a free Auth0 account
-
-1. Go to [Auth0](https://auth0.com/signup) and click Sign Up.
-2. Use Google, GitHub or Microsoft Account to login.
-
-## Issue Reporting
-
-If you have found a bug or if you have a feature request, please report them at this repository issues section. Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://auth0.com/whitehat) details the procedure for disclosing security issues.
-
-## Author
-
-[Auth0](auth0.com)
-
-## License
-
-This project is licensed under the MIT license. See the [LICENSE](LICENSE.txt) file for more info.
+This process ensures only legitimate app instances can access the backend, enhancing security by preventing tampered or modified apps from interacting with the server.
