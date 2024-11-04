@@ -1,41 +1,55 @@
 const forge = require('node-forge');
 const cbor = require('cbor');
 const asn1 = forge.asn1;
+const crypto = require("crypto"); 
 
-// Apple App Attest root certificate
-const APPLE_ROOT_CERT = process.env.APPLE_ROOT_CERT;
+// Load Apple Root Certificate
+const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Ensure it is loaded from your environment or directly in the code
 
+// Helper to convert PEM to DER format
+function pemToDer(pem) {
+  const base64 = pem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n/g, '');
+  return Buffer.from(base64, 'base64');
+}
+
+// Function to verify the certificate chain using crypto module
 function verifyCertificateChain(certChain) {
-    try {
-      const rootCert = forge.pki.certificateFromPem(APPLE_ROOT_CERT);
-      const chain = certChain.map((cert, index) => {
-        try {
-          const parsedCert = forge.pki.certificateFromAsn1(forge.asn1.fromDer(cert.toString('binary')));
-          if (parsedCert.publicKey && parsedCert.publicKey.type !== 'rsa') {
-            console.log(`Certificate ${index} uses ${parsedCert.publicKey.type}, expected ECDSA or compatible algorithm.`);
-          }
-          return parsedCert;
-        } catch (err) {
-          console.error(`Failed to parse certificate ${index}:`, err);
-          throw err;
-        }
-      });
-  
-      // Verify the chain
-      const verified = forge.pki.verifyCertificateChain(rootCert, chain, (vfd) => {
-        console.log("Verification status for chain:", vfd);
-        return { verified: vfd === true };
-      });
-  
-      console.log(verified ? "Certificate chain verified successfully." : "Certificate chain verification failed.");
-      return verified;
-    } catch (error) {
-      console.error("Certificate verification process failed:", error);
-      return false;
+  try {
+    const rootCert = crypto.createPublicKey({
+      key: APPLE_ROOT_CERT_PEM,
+      format: 'pem',
+      type: 'spki',
+    });
+
+    for (let i = 0; i < certChain.length - 1; i++) {
+      const cert = certChain[i];
+      const parentCert = certChain[i + 1];
+      // Verify the certificate using the parent public key
+      const isVerified = crypto.verify(
+        null,
+        cert,
+        {
+          key: parentCert,
+          format: 'der',
+          type: 'spki',
+        },
+        cert
+      );
+
+      if (!isVerified) {
+        console.error(`Certificate ${i} verification failed`);
+        return false;
+      }
     }
+
+    console.log("Certificate chain verified successfully.");
+    return true;
+  } catch (error) {
+    console.error("Certificate verification process failed:", error);
+    return false;
   }
-  
-  
+}
+
 function parseCBOR(buffer) {
   return cbor.decodeFirstSync(buffer);
 }
