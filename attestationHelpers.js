@@ -8,13 +8,12 @@ const APPLE_ROOT_CERT = process.env.APPLE_ROOT_CERT;
 function verifyCertificateChain(certChain) {
     try {
       const rootCert = forge.pki.certificateFromPem(APPLE_ROOT_CERT);
-  
-      // Parse each certificate in the chain from ASN.1 to PEM format
       const chain = certChain.map((cert, index) => {
         try {
-          console.log(`Certificate ${index} is ${cert}`);
           const parsedCert = forge.pki.certificateFromAsn1(forge.asn1.fromDer(cert.toString('binary')));
-          console.log(`Certificate ${index} successfully parsed:`, parsedCert.subject.attributes);
+          if (parsedCert.publicKey && parsedCert.publicKey.type !== 'rsa') {
+            console.log(`Certificate ${index} uses ${parsedCert.publicKey.type}, expected ECDSA or compatible algorithm.`);
+          }
           return parsedCert;
         } catch (err) {
           console.error(`Failed to parse certificate ${index}:`, err);
@@ -22,24 +21,20 @@ function verifyCertificateChain(certChain) {
         }
       });
   
-      // Verify the certificate chain
+      // Verify the chain
       const verified = forge.pki.verifyCertificateChain(rootCert, chain, (vfd) => {
         console.log("Verification status for chain:", vfd);
         return { verified: vfd === true };
       });
   
-      if (verified) {
-        console.log("Certificate chain verified successfully.");
-      } else {
-        console.error("Certificate chain verification failed.");
-      }
-  
+      console.log(verified ? "Certificate chain verified successfully." : "Certificate chain verification failed.");
       return verified;
     } catch (error) {
       console.error("Certificate verification process failed:", error);
       return false;
     }
   }
+  
   
 function parseCBOR(buffer) {
   return cbor.decodeFirstSync(buffer);
