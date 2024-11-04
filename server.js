@@ -9,6 +9,7 @@ const fs = require('fs');
 
 const app = express();
 
+
 // Middleware setup
 app.use(morgan("dev"));
 app.use(helmet());
@@ -22,6 +23,8 @@ app.get("/auth_config.json", (req, res) => {
 
 // Load the private key for JWT signing
 const privateKey = process.env.PRIVATE_KEY;
+
+const auth0PrivateKey = process.env.AUTH0_PRIVATE_KEY;
 
 // Replace with your actual values
 const teamId = 'GCAN367Y39';
@@ -67,8 +70,28 @@ app.post("/verify-attestation", async (req, res) => {
       }
     });
 
+    // generate Auth0 JWT for authetnication on /token
+      const token = jwt.sign({}, auth0PrivateKey, {
+        expiresIn: '10m', 
+        audience: 'https://nelson.jp.auth0.com/',
+        issuer: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+        header: {
+            alg: 'RS256',
+            kid: "2WitOoEuiUeIkGaB_j6QqjWCqSepKODyX8mZkwkayL0",
+            typ: 'JWT'
+        },
+        subject: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+        jti: crypto.randomUUID,
+    });
+
+    const jwtAttested = {
+      appleData : appleResponse.data,
+      jwt: token
+    }
+    
+
     // If the attestation is verified successfully
-    return res.status(200).json({ message: "Attestation verified", data: appleResponse.data });
+    return res.status(200).json({ message: "Attestation verified", data: jwtAttested });
 
   } catch (error) {
     console.error("Error verifying attestation:", error.response ? error.response.data : error.message);
