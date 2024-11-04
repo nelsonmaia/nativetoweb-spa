@@ -6,10 +6,6 @@ function parseCBOR(buffer) {
     return cbor.decodeFirstSync(buffer);
 }
 
-const crypto = require('crypto');
-const cbor = require('cbor');
-
-
 function verifyCertificateChain(certChain, rootCertPem) {
     try {
         // Verify each certificate in the chain up to the root
