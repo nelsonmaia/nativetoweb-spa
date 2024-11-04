@@ -3,46 +3,48 @@ const crypto = require('crypto');
 const cbor = require('cbor');
 
 // Load Apple Root Certificate (PEM format)
-const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Ensure the cert is set as an environment variable or load directly
+const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Load from an environment variable or directly in the code
 
-// Helper to convert PEM to DER format
+// Helper function to convert PEM to DER format
 function pemToDer(pem) {
   const base64 = pem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n/g, '');
   return Buffer.from(base64, 'base64');
 }
 
-// Function to verify the certificate chain using node-forge and crypto
+// Function to verify the certificate chain using Node.js `crypto` module and `node-forge`
 function verifyCertificateChain(certChain) {
   try {
-    const rootCert = forge.pki.certificateFromPem(APPLE_ROOT_CERT_PEM);
-    const chain = certChain.map((cert, index) => {
-      try {
-        console.log(`Parsing certificate ${index}`);
-        const parsedCert = forge.pki.certificateFromAsn1(forge.asn1.fromDer(cert.toString('binary')));
-        console.log(`Certificate ${index} successfully parsed`);
-        return parsedCert;
-      } catch (err) {
-        console.error(`Failed to parse certificate ${index}:`, err);
-        throw err;
-      }
+    // Convert root certificate from PEM to a usable public key
+    const rootCert = crypto.createPublicKey({
+      key: APPLE_ROOT_CERT_PEM,
+      format: 'pem',
+      type: 'spki',
     });
 
-    // Verify the chain using crypto for final check
-    for (let i = 0; i < chain.length - 1; i++) {
-      const currentCert = chain[i];
-      const nextCert = chain[i + 1];
-      const currentPublicKey = forge.pki.publicKeyToPem(currentCert.publicKey);
-      const nextPemCert = forge.pki.certificateToPem(nextCert);
+    for (let i = 0; i < certChain.length - 1; i++) {
+      const certBuffer = Buffer.from(certChain[i].toString('binary'), 'binary');
+      const parentCertBuffer = Buffer.from(certChain[i + 1].toString('binary'), 'binary');
+
+      const certPem = forge.pki.certificateToPem(forge.pki.certificateFromAsn1(forge.asn1.fromDer(certBuffer)));
+      const parentCertPem = forge.pki.certificateToPem(forge.pki.certificateFromAsn1(forge.asn1.fromDer(parentCertBuffer)));
+
+      const certPublicKey = crypto.createPublicKey({
+        key: parentCertPem,
+        format: 'pem',
+        type: 'spki',
+      });
+
       const isVerified = crypto.verify(
         null,
-        Buffer.from(nextPemCert),
+        certBuffer,
         {
-          key: currentPublicKey,
-          format: 'pem',
+          key: certPublicKey,
+          format: 'der',
           type: 'spki',
         },
-        Buffer.from(nextPemCert)
+        certBuffer
       );
+
       if (!isVerified) {
         console.error(`Certificate ${i} verification failed`);
         return false;
@@ -57,7 +59,7 @@ function verifyCertificateChain(certChain) {
   }
 }
 
-// Function to decode CBOR and extract data
+// Function to decode CBOR
 function parseCBOR(buffer) {
   return cbor.decodeFirstSync(buffer);
 }
