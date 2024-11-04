@@ -129,7 +129,7 @@ struct AppAttestService {
                   let jsonData = try? JSONSerialization.data(withJSONObject: jsonResponse, options: .prettyPrinted),
                   let jsonString = String(data: jsonData, encoding: .utf8) {
                    print("Attestation sent successfully. Response JSON: \(jsonString)")
-                   apiResponseHandler("Attestation sent successfully")
+                   apiResponseHandler("\(jsonString)")
                } else {
                    print("Unable to parse response as JSON")
                    apiResponseHandler("Unable to parse response as JSON")
