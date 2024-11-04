@@ -1,10 +1,9 @@
 const forge = require('node-forge');
+const crypto = require('crypto');
 const cbor = require('cbor');
-const asn1 = forge.asn1;
-const crypto = require("crypto"); 
 
-// Load Apple Root Certificate
-const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Ensure it is loaded from your environment or directly in the code
+// Load Apple Root Certificate (PEM format)
+const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Ensure the cert is set as an environment variable or load directly
 
 // Helper to convert PEM to DER format
 function pemToDer(pem) {
@@ -12,30 +11,38 @@ function pemToDer(pem) {
   return Buffer.from(base64, 'base64');
 }
 
-// Function to verify the certificate chain using crypto module
+// Function to verify the certificate chain using node-forge and crypto
 function verifyCertificateChain(certChain) {
   try {
-    const rootCert = crypto.createPublicKey({
-      key: APPLE_ROOT_CERT_PEM,
-      format: 'pem',
-      type: 'spki',
+    const rootCert = forge.pki.certificateFromPem(APPLE_ROOT_CERT_PEM);
+    const chain = certChain.map((cert, index) => {
+      try {
+        console.log(`Parsing certificate ${index}`);
+        const parsedCert = forge.pki.certificateFromAsn1(forge.asn1.fromDer(cert.toString('binary')));
+        console.log(`Certificate ${index} successfully parsed`);
+        return parsedCert;
+      } catch (err) {
+        console.error(`Failed to parse certificate ${index}:`, err);
+        throw err;
+      }
     });
 
-    for (let i = 0; i < certChain.length - 1; i++) {
-      const cert = certChain[i];
-      const parentCert = certChain[i + 1];
-      // Verify the certificate using the parent public key
+    // Verify the chain using crypto for final check
+    for (let i = 0; i < chain.length - 1; i++) {
+      const currentCert = chain[i];
+      const nextCert = chain[i + 1];
+      const currentPublicKey = forge.pki.publicKeyToPem(currentCert.publicKey);
+      const nextPemCert = forge.pki.certificateToPem(nextCert);
       const isVerified = crypto.verify(
         null,
-        cert,
+        Buffer.from(nextPemCert),
         {
-          key: parentCert,
-          format: 'der',
+          key: currentPublicKey,
+          format: 'pem',
           type: 'spki',
         },
-        cert
+        Buffer.from(nextPemCert)
       );
-
       if (!isVerified) {
         console.error(`Certificate ${i} verification failed`);
         return false;
@@ -50,10 +57,12 @@ function verifyCertificateChain(certChain) {
   }
 }
 
+// Function to decode CBOR and extract data
 function parseCBOR(buffer) {
   return cbor.decodeFirstSync(buffer);
 }
 
+// Function to extract and validate nonce from a certificate
 function extractAndValidateNonce(cert, expectedNonce) {
   const ext = cert.extensions.find(ext => ext.id === '1.2.840.113635.100.8.2');
   if (!ext) {
@@ -61,25 +70,23 @@ function extractAndValidateNonce(cert, expectedNonce) {
     return false;
   }
 
-  const nonceAsn1 = asn1.fromDer(Buffer.from(ext.value, 'base64').toString('binary'));
+  const nonceAsn1 = forge.asn1.fromDer(Buffer.from(ext.value, 'base64').toString('binary'));
   const nonce = nonceAsn1.value[0].value;
 
   return nonce === expectedNonce;
 }
 
-function validateAttestation(attestationObj, expectedNonce, keyId) {
+// Function to validate attestation
+function validateAttestation(attestationObj, expectedNonce) {
   const { attStmt, authData } = attestationObj;
-
   const credCert = forge.pki.certificateFromAsn1(forge.asn1.fromDer(attStmt.x5c[0].toString('binary')));
-  const isCertValid = verifyCertificateChain(attStmt.x5c);
 
-  if (!isCertValid) {
+  if (!verifyCertificateChain(attStmt.x5c)) {
     console.error("Certificate chain verification failed");
     return false;
   }
 
-  const nonceIsValid = extractAndValidateNonce(credCert, expectedNonce);
-  if (!nonceIsValid) {
+  if (!extractAndValidateNonce(credCert, expectedNonce)) {
     console.error("Nonce validation failed");
     return false;
   }
