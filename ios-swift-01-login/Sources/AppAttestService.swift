@@ -45,7 +45,7 @@ struct AppAttestService {
                         }
 
                         // Send the attestation and keyId to your backend server
-                        sendAttestationToServer(attestation: attestation, keyId: keyId, apiResponseHandler: apiResponseHandler)
+                        sendAttestationToServer(attestation: attestation, keyId: keyId, challenge: challenge, apiResponseHandler: apiResponseHandler)
                     }
                 }
             }
@@ -95,7 +95,7 @@ struct AppAttestService {
            }.resume()
     }
 
-    static func sendAttestationToServer(attestation: Data, keyId: String, apiResponseHandler: @escaping (String) -> Void) {
+    static func sendAttestationToServer(attestation: Data, keyId: String, challenge: Data, apiResponseHandler: @escaping (String) -> Void) {
         guard let url = URL(string: "https://nativetoweb-spa.vercel.app/verify-attestation") else {
             print("Invalid backend URL")
             return
@@ -107,7 +107,8 @@ struct AppAttestService {
 
         let json: [String: Any] = [
             "keyId": keyId,
-            "attestation": attestation.base64EncodedString() // Convert Data to base64
+            "attestation": attestation.base64EncodedString() ,
+            "challenge": challenge.base64EncodedString()
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: []) else {

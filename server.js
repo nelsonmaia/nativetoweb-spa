@@ -18,43 +18,43 @@ const auth0PrivateKey = process.env.AUTH0_PRIVATE_KEY;
 
 // Replace with your actual values
 const teamId = 'GCAN367Y39';
-const bundleIdentifier = 'com.yourapp.bundleid'; // Replace with your app's bundle identifier
+const bundleIdentifier = 'nelson.matias.SwiftSample'; // Replace with your app's bundle identifier
+const keyId = 'SVR9K69LLW';
+const issuerId = '05eed3c0-d784-42b6-a078-58d67ce0ffc3';
 
 app.post("/verify-attestation", async (req, res) => {
-    const { keyId, attestation, challenge } = req.body;
+  const { keyId, attestation, challenge } = req.body;
 
-    if (!keyId || !attestation || !challenge) {
-        console.error("Invalid request: Missing keyId, attestation, or challenge");
-        return res.status(400).json({ message: "Invalid request, missing keyId, attestation, or challenge" });
-    }
+  if (!keyId || !attestation || !challenge) {
+      console.error("Invalid request: Missing keyId, attestation, or challenge");
+      return res.status(400).json({ message: "Invalid request, missing keyId, attestation, or challenge" });
+  }
 
-    try {
-        console.log("Received keyId:", keyId);
-        console.log("Received attestation (base64):", attestation);
+  try {
+      const { verifyAttestation } = await import('node-app-attest');
 
-        const { verifyAttestation } = await import('node-app-attest');
+      const result = verifyAttestation({
+          attestation: Buffer.from(attestation, 'base64'),
+          challenge: Buffer.from(challenge, 'base64'), // Ensure the challenge is sent as base64
+          keyId: keyId,
+          bundleIdentifier: bundleIdentifier,
+          teamIdentifier: teamId,
+          allowDevelopmentEnvironment: true // Set to `false` in production
+      });
 
-        const result = verifyAttestation({
-            attestation: Buffer.from(attestation, 'base64'),
-            challenge: challenge,
-            keyId: keyId,
-            bundleIdentifier: bundleIdentifier,
-            teamIdentifier: teamId,
-            allowDevelopmentEnvironment: true // Set to `false` in production
-        });
+      console.log("Attestation result:", result);
 
-        console.log("Attestation result:", result);
-        
-        return res.status(200).json({
-            message: "Attestation verified successfully",
-            publicKey: result.publicKey,
-            keyId: keyId
-        });
-    } catch (error) {
-        console.error("Error verifying attestation:", error);
-        return res.status(401).json({ message: "Attestation verification failed", error: error.message });
-    }
+      return res.status(200).json({
+          message: "Attestation verified successfully",
+          publicKey: result.publicKey,
+          keyId: keyId
+      });
+  } catch (error) {
+      console.error("Error verifying attestation:", error);
+      return res.status(401).json({ message: "Attestation verification failed", error: error.message });
+  }
 });
+
 
 // Challenge endpoint for app attestation
 app.get("/get-challenge", (req, res) => {
