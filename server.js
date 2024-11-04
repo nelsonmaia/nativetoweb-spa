@@ -61,6 +61,7 @@ app.post("/verify-attestation", async (req, res) => {
 app.get("/get-challenge", (req, res) => {
     // const challenge = crypto.randomBytes(32).toString('base64');
     const challenge = uuid();
+    console.log(`Challenge generated ${challenge}`)
     res.status(200).json({ challenge });
 });
 
