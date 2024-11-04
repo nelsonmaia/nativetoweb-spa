@@ -105,26 +105,42 @@ app.post("/verify-attestation", async (req, res) => {
   const { keyId, attestation } = req.body;
 
   if (!keyId || !attestation) {
+    console.error("Invalid request: Missing keyId or attestation");
     return res.status(400).json({ message: "Invalid request, missing keyId or attestation" });
   }
 
   try {
+    // Debug: Print incoming data
+    console.log("Received keyId:", keyId);
+    console.log("Received attestation (base64):", attestation);
+
     // Parse the attestation object from base64 to a buffer and then decode it as CBOR
-    const decodedAttestation = parseCBOR(Buffer.from(attestation, 'base64'));
+    const attestationBuffer = Buffer.from(attestation, 'base64');
+    console.log("Attestation buffer length:", attestationBuffer.length);
+
+    const decodedAttestation = parseCBOR(attestationBuffer);
+    console.log("Decoded attestation:", decodedAttestation);
 
     // Validate the attestation certificates with Apple's root certificate
     const isValidChain = verifyCertificateChain(decodedAttestation.attStmt.x5c);
+    console.log("Certificate chain validation result:", isValidChain);
     if (!isValidChain) {
+      console.error("Invalid certificate chain");
       return res.status(400).json({ message: "Invalid certificate chain" });
     }
 
     // Create the nonce by hashing the authenticator data and challenge
     const challengeHash = crypto.createHash('sha256').update(decodedAttestation.authData).digest();
+    console.log("Challenge hash (hex):", challengeHash.toString('hex'));
+
     const compositeHash = crypto.createHash('sha256').update(Buffer.concat([decodedAttestation.authData, challengeHash])).digest();
+    console.log("Composite hash (hex):", compositeHash.toString('hex'));
 
     // Extract and validate the nonce in the credential certificate
     const isNonceValid = validateAttestation(decodedAttestation, compositeHash);
+    console.log("Nonce validation result:", isNonceValid);
     if (!isNonceValid) {
+      console.error("Nonce validation failed");
       return res.status(400).json({ message: "Nonce validation failed" });
     }
 
@@ -134,12 +150,14 @@ app.post("/verify-attestation", async (req, res) => {
       keyId: keyId
     };
 
+    console.log("Attestation verification successful");
     return res.status(200).json(responseMessage);
   } catch (error) {
     console.error("Error verifying attestation:", error.message);
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
 
 app.get("/get-challenge", (req, res) => {
   // Generate a secure random 32-byte challenge
