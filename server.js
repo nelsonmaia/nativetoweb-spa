@@ -6,7 +6,7 @@ const axios = require("axios");
 const crypto = require("crypto"); 
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-const { verifyCertificateChain, parseCBOR, validateAttestation } = require('./attestationHelpers');
+const { verifyCertificateChain } = require('./attestationHelpers');
 
 
 const app = express();

@@ -5,60 +5,53 @@ const cbor = require('cbor');
 // Load Apple Root Certificate (PEM format)
 const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Ensure the cert is set as an environment variable or load directly
 
-// Helper function to convert PEM to DER format
+// Convert PEM to DER format
 function pemToDer(pem) {
-  const base64 = pem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n/g, '');
-  return Buffer.from(base64, 'base64');
+    const base64 = pem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n/g, '');
+    return Buffer.from(base64, 'base64');
 }
 
-// Function to verify the certificate chain using node-forge and crypto
-function verifyCertificateChain(certChain) {
-  try {
-    // Convert root certificate from PEM to a usable public key
-    const rootCert = forge.pki.certificateFromPem(APPLE_ROOT_CERT_PEM);
+// Verify the certificate chain using Node.js `crypto` module
+function verifyCertificateChain(certChain, rootCertPem) {
+    try {
+        for (let i = 0; i < certChain.length - 1; i++) {
+            const cert = certChain[i];
+            const parentCert = certChain[i + 1];
 
-    for (let i = 0; i < certChain.length - 1; i++) {
-      const certBuffer = Buffer.from(certChain[i].toString('binary'), 'binary');
-      const parentCertBuffer = Buffer.from(certChain[i + 1].toString('binary'), 'binary');
+            // Extract the public key from the parent certificate
+            const parentCertDer = Buffer.from(parentCert);
+            const parentPublicKey = crypto.createPublicKey({
+                key: parentCertDer,
+                format: 'der',
+                type: 'spki'
+            });
 
-      const certPem = forge.pki.certificateToPem(forge.pki.certificateFromAsn1(forge.asn1.fromDer(certBuffer)));
-      const parentCertPem = forge.pki.certificateToPem(forge.pki.certificateFromAsn1(forge.asn1.fromDer(parentCertBuffer)));
+            // Verify current certificate with the parent public key
+            const isVerified = crypto.verify(
+                'sha256',
+                cert,
+                {
+                    key: parentPublicKey,
+                    format: 'der',
+                    type: 'spki'
+                },
+                cert
+            );
 
-      const certPublicKey = crypto.createPublicKey({
-        key: parentCertPem,
-        format: 'pem',
-        type: 'spki',
-      });
+            if (!isVerified) {
+                console.error(`Certificate ${i} verification failed`);
+                return false;
+            }
+        }
 
-      const isVerified = crypto.verify(
-        null,
-        certBuffer,
-        {
-          key: certPublicKey,
-          format: 'pem',
-          type: 'spki',
-        },
-        certBuffer
-      );
-
-      if (!isVerified) {
-        console.error(`Certificate ${i} verification failed`);
+        console.log("Certificate chain verified successfully.");
+        return true;
+    } catch (error) {
+        console.error("Certificate verification process failed:", error);
         return false;
-      }
     }
-
-    console.log("Certificate chain verified successfully.");
-    return true;
-  } catch (error) {
-    console.error("Certificate verification process failed:", error);
-    return false;
-  }
 }
 
-// Function to decode CBOR
-function parseCBOR(buffer) {
-  return cbor.decodeFirstSync(buffer);
-}
 
 // Function to extract and validate nonce from a certificate
 function extractAndValidateNonce(cert, expectedNonce) {
@@ -95,7 +88,7 @@ function validateAttestation(attestationObj, expectedNonce) {
 
 module.exports = {
   verifyCertificateChain,
-  parseCBOR,
+  pemToDer,
   extractAndValidateNonce,
   validateAttestation,
 };
