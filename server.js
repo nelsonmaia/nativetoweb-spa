@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
+import { v4 as uuid } from 'uuid';
 
 
 const app = express();
@@ -58,7 +59,8 @@ app.post("/verify-attestation", async (req, res) => {
 
 // Challenge endpoint for app attestation
 app.get("/get-challenge", (req, res) => {
-    const challenge = crypto.randomBytes(32).toString('base64');
+    // const challenge = crypto.randomBytes(32).toString('base64');
+    const challenge = uuid();
     res.status(200).json({ challenge });
 });
 

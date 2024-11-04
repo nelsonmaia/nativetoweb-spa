@@ -108,7 +108,7 @@ struct AppAttestService {
         let json: [String: Any] = [
             "keyId": keyId,
             "attestation": attestation.base64EncodedString() ,
-            "challenge": challenge.base64EncodedString()
+            "challenge": challenge
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: []) else {
