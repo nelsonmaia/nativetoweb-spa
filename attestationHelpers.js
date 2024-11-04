@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const cbor = require('cbor');
 
 // Load Apple Root Certificate (PEM format)
-const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Load from an environment variable or directly in the code
+const APPLE_ROOT_CERT_PEM = process.env.APPLE_ROOT_CERT; // Ensure the cert is set as an environment variable or load directly
 
 // Helper function to convert PEM to DER format
 function pemToDer(pem) {
@@ -11,15 +11,11 @@ function pemToDer(pem) {
   return Buffer.from(base64, 'base64');
 }
 
-// Function to verify the certificate chain using Node.js `crypto` module and `node-forge`
+// Function to verify the certificate chain using node-forge and crypto
 function verifyCertificateChain(certChain) {
   try {
     // Convert root certificate from PEM to a usable public key
-    const rootCert = crypto.createPublicKey({
-      key: APPLE_ROOT_CERT_PEM,
-      format: 'pem',
-      type: 'spki',
-    });
+    const rootCert = forge.pki.certificateFromPem(APPLE_ROOT_CERT_PEM);
 
     for (let i = 0; i < certChain.length - 1; i++) {
       const certBuffer = Buffer.from(certChain[i].toString('binary'), 'binary');
@@ -39,7 +35,7 @@ function verifyCertificateChain(certChain) {
         certBuffer,
         {
           key: certPublicKey,
-          format: 'der',
+          format: 'pem',
           type: 'spki',
         },
         certBuffer
