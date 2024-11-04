@@ -6,6 +6,8 @@ const axios = require("axios"); // Use axios for HTTP requests
 const crypto = require("crypto"); // For generating the challenge
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const { verifyCertificateChain, parseCBOR, validateAttestation } = require('./attestationHelpers');
+
 
 const app = express();
 
@@ -48,6 +50,57 @@ function generateJWT() {
     return token;
 }
 
+// app.post("/verify-attestation", async (req, res) => {
+//   const { keyId, attestation } = req.body;
+
+//   if (!keyId || !attestation) {
+//     return res.status(400).json({ message: "Invalid request, missing keyId or attestation" });
+//   }
+
+//   try {
+//     // Generate the JWT for authorization
+//     const jwtToken = generateJWT();
+
+//     // Call Apple's App Attestation service to verify the attestation
+//     const appleResponse = await axios.post('https://api.appattest.apple.com/v1/attestation', {
+//       keyId: keyId,
+//       attestation: attestation
+//     }, {
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${jwtToken}` // Use the generated JWT for authorization
+//       }
+//     });
+
+//     // generate Auth0 JWT for authetnication on /token
+//       const token = jwt.sign({}, auth0PrivateKey, {
+//         expiresIn: '10m', 
+//         audience: 'https://nelson.jp.auth0.com/',
+//         issuer: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+//         header: {
+//             alg: 'RS256',
+//             kid: "2WitOoEuiUeIkGaB_j6QqjWCqSepKODyX8mZkwkayL0",
+//             typ: 'JWT'
+//         },
+//         subject: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+//         jti: crypto.randomUUID,
+//     });
+
+//     const jwtAttested = {
+//       appleData : appleResponse.data,
+//       jwt: token
+//     }
+    
+
+//     // If the attestation is verified successfully
+//     return res.status(200).json({ message: "Attestation verified", data: jwtAttested });
+
+//   } catch (error) {
+//     console.error("Error verifying attestation:", error.response ? error.response.data : error.message);
+//     return res.status(500).json({ message: "Internal server error", error: error.message });
+//   }
+// });
+
 app.post("/verify-attestation", async (req, res) => {
   const { keyId, attestation } = req.body;
 
@@ -56,45 +109,34 @@ app.post("/verify-attestation", async (req, res) => {
   }
 
   try {
-    // Generate the JWT for authorization
-    const jwtToken = generateJWT();
+    // Parse the attestation object from base64 to a buffer and then decode it as CBOR
+    const decodedAttestation = parseCBOR(Buffer.from(attestation, 'base64'));
 
-    // Call Apple's App Attestation service to verify the attestation
-    const appleResponse = await axios.post('https://api.appattest.apple.com/v1/attestation', {
-      keyId: keyId,
-      attestation: attestation
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${jwtToken}` // Use the generated JWT for authorization
-      }
-    });
-
-    // generate Auth0 JWT for authetnication on /token
-      const token = jwt.sign({}, auth0PrivateKey, {
-        expiresIn: '10m', 
-        audience: 'https://nelson.jp.auth0.com/',
-        issuer: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
-        header: {
-            alg: 'RS256',
-            kid: "2WitOoEuiUeIkGaB_j6QqjWCqSepKODyX8mZkwkayL0",
-            typ: 'JWT'
-        },
-        subject: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
-        jti: crypto.randomUUID,
-    });
-
-    const jwtAttested = {
-      appleData : appleResponse.data,
-      jwt: token
+    // Validate the attestation certificates with Apple's root certificate
+    const isValidChain = verifyCertificateChain(decodedAttestation.attStmt.x5c);
+    if (!isValidChain) {
+      return res.status(400).json({ message: "Invalid certificate chain" });
     }
-    
 
-    // If the attestation is verified successfully
-    return res.status(200).json({ message: "Attestation verified", data: jwtAttested });
+    // Create the nonce by hashing the authenticator data and challenge
+    const challengeHash = crypto.createHash('sha256').update(decodedAttestation.authData).digest();
+    const compositeHash = crypto.createHash('sha256').update(Buffer.concat([decodedAttestation.authData, challengeHash])).digest();
 
+    // Extract and validate the nonce in the credential certificate
+    const isNonceValid = validateAttestation(decodedAttestation, compositeHash);
+    if (!isNonceValid) {
+      return res.status(400).json({ message: "Nonce validation failed" });
+    }
+
+    // If all validations pass, generate a response
+    const responseMessage = {
+      message: "Attestation verified",
+      keyId: keyId
+    };
+
+    return res.status(200).json(responseMessage);
   } catch (error) {
-    console.error("Error verifying attestation:", error.response ? error.response.data : error.message);
+    console.error("Error verifying attestation:", error.message);
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });

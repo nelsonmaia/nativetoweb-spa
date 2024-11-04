@@ -116,14 +116,24 @@ struct AppAttestService {
         }
 
         request.httpBody = jsonData
+        
+        print("Json Data : \(jsonData)")
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else {
                 print("Error sending attestation: \(error!.localizedDescription)")
                 return
             }
-            print("Attestation sent successfully")
-            apiResponseHandler("Attestation sent successfully")
+            // Convert the response data to a readable JSON string for debugging
+               if let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []),
+                  let jsonData = try? JSONSerialization.data(withJSONObject: jsonResponse, options: .prettyPrinted),
+                  let jsonString = String(data: jsonData, encoding: .utf8) {
+                   print("Attestation sent successfully. Response JSON: \(jsonString)")
+                   apiResponseHandler("Attestation sent successfully")
+               } else {
+                   print("Unable to parse response as JSON")
+                   apiResponseHandler("Unable to parse response as JSON")
+               }
         }.resume()
     }
 }
