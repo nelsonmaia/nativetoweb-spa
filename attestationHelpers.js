@@ -6,26 +6,28 @@ function parseCBOR(buffer) {
     return cbor.decodeFirstSync(buffer);
 }
 
-// Verify the certificate chain using Node.js `crypto` module
+const crypto = require('crypto');
+const cbor = require('cbor');
+
+
 function verifyCertificateChain(certChain, rootCertPem) {
     try {
+        // Verify each certificate in the chain up to the root
         for (let i = 0; i < certChain.length - 1; i++) {
-            const certBuffer = Buffer.from(certChain[i]);
-            const parentCertBuffer = Buffer.from(certChain[i + 1]);
+            const cert = Buffer.from(certChain[i], 'base64');
+            const parentCert = Buffer.from(certChain[i + 1], 'base64');
 
-            // Create the public key from the parent certificate
             const parentPublicKey = crypto.createPublicKey({
-                key: parentCertBuffer,
+                key: parentCert,
                 format: 'der',
                 type: 'spki'
             });
 
-            // Verify the current certificate with the parent public key
             const isVerified = crypto.verify(
                 'sha256',
-                certBuffer,
+                cert,
                 parentPublicKey,
-                certBuffer
+                cert
             );
 
             if (!isVerified) {
@@ -41,6 +43,8 @@ function verifyCertificateChain(certChain, rootCertPem) {
         return false;
     }
 }
+
+
 
 // Function to extract and validate the nonce
 function extractAndValidateNonce(cert, expectedNonce) {
