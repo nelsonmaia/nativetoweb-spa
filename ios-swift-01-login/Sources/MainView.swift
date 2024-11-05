@@ -259,24 +259,24 @@ struct MainView: View {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
         
-//        let jsonData: [String: Any] = [
-//                   "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-//                   "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
-//                   "subject_token": idToken,
-//                   "client_id": clientId,
-//                   "client_assertion" : auth0ClientAssertion,
-//                   "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-//               ]
-        
         let jsonData: [String: Any] = [
-            "grant_type": "password",
-            "client_id": clientId,
-            "username": "user@example.org",
-            "password": "Auth0Dem0!",
-            "realm": "Username-Password-Authentication",
-            "client_assertion" : auth0ClientAssertion,
-            "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-        ]
+                   "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                   "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
+                   "subject_token": idToken,
+                   "client_id": "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+                   "client_assertion" : auth0ClientAssertion,
+                   "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+               ]
+        
+//        let jsonData: [String: Any] = [
+//            "grant_type": "password",
+//            "client_id": clientId,
+//            "username": "user@example.org",
+//            "password": "Auth0Dem0!",
+//            "realm": "Username-Password-Authentication",
+//            "client_assertion" : auth0ClientAssertion,
+//            "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+//        ]
         
         
         print("\(jsonData)")
