@@ -48,10 +48,25 @@ app.post("/verify-attestation", async (req, res) => {
 
       console.log("Attestation result:", result);
 
+      //     // generate Auth0 JWT for authetnication on /token
+          const token = jwt.sign({}, auth0PrivateKey, {
+            expiresIn: '10m', 
+            audience: 'https://nelson.jp.auth0.com/',
+            issuer: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+            header: {
+                alg: 'RS256',
+                kid: "2WitOoEuiUeIkGaB_j6QqjWCqSepKODyX8mZkwkayL0",
+                typ: 'JWT'
+            },
+            subject: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+            jti: crypto.randomUUID,
+        });
+
       return res.status(200).json({
           message: "Attestation verified successfully",
           publicKey: result.publicKey,
-          keyId: keyId
+          keyId: keyId,
+          auth0Token: token
       });
   } catch (error) {
       console.error("Error verifying attestation:", error);

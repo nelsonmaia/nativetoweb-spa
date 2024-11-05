@@ -117,7 +117,7 @@ struct AppAttestService {
                if let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []),
                   let jsonData = try? JSONSerialization.data(withJSONObject: jsonResponse, options: .prettyPrinted),
                   let jsonString = String(data: jsonData, encoding: .utf8) {
-                   print("Attestation sent successfully. Response JSON: \(jsonString)")
+                   print("\(jsonString)")
                    apiResponseHandler("\(jsonString)")
                } else {
                    print("Unable to parse response as JSON")
