@@ -4,7 +4,9 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const crypto = require("crypto");
 const jwt = require('jsonwebtoken');
-import { v4 as uuid } from 'uuid';
+const uuid = require("uuid");
+const { SignJWT } = require('jose')
+
 
 
 const app = express();
@@ -49,24 +51,38 @@ app.post("/verify-attestation", async (req, res) => {
       console.log("Attestation result:", result);
 
       //     // generate Auth0 JWT for authetnication on /token
-          const token = jwt.sign({ jti: crypto.randomUUID,}, auth0PrivateKey, {
-            expiresIn: '10m', 
-            audience: 'https://nelson.jp.auth0.com/',
-            issuer: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
-            header: {
-                alg: 'RS256',
-                kid: "2WitOoEuiUeIkGaB_j6QqjWCqSepKODyX8mZkwkayL0",
-                typ: 'JWT'
-            },
-            subject: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+        //   const token = jwt.sign({ jti: crypto.randomUUID,}, auth0PrivateKey, {
+        //     expiresIn: '10m', 
+        //     audience: 'https://nelson.jp.auth0.com/',
+        //     issuer: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+        //     header: {
+        //         alg: 'RS256',
+        //         kid: "2WitOoEuiUeIkGaB_j6QqjWCqSepKODyX8mZkwkayL0",
+        //         typ: 'JWT'
+        //     },
+        //     subject: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
            
-        });
+        // });
+
+        const jwt = await new SignJWT({})
+        .setProtectedHeader({ 
+            alg: 'RS256', 
+        })
+        .setIssuedAt()
+        .setIssuer('6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh')
+        .setSubject('6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh')
+        .setAudience('https://nelson.jp.auth0.com/') // or your CUSTOM_DOMAIN
+        .setExpirationTime('1m')
+        .setJti(uuid.v4())
+        .sign(auth0PrivateKey);
+        
+
 
       return res.status(200).json({
           message: "Attestation verified successfully",
           publicKey: result.publicKey,
           keyId: keyId,
-          auth0Token: token
+          auth0Token: jwt
       });
   } catch (error) {
       console.error("Error verifying attestation:", error);
