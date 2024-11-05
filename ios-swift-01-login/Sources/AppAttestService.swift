@@ -1,14 +1,6 @@
-//
-//  AppAttestService.swift
-//  SwiftSample
-//
-//  Created by Nelson Maia Matias on 17/10/2024.
-//
-
 import DeviceCheck
 import Foundation
 import CryptoKit
-
 
 struct AppAttestService {
 
@@ -31,8 +23,17 @@ struct AppAttestService {
 
                 // Fetch a challenge from your backend server
                 fetchChallenge { challenge in
+                    // Convert the challenge from String to Data
+                    guard let challengeData = challenge.data(using: .utf8) else {
+                        print("Failed to convert challenge to Data")
+                        apiResponseHandler("Failed to convert challenge to Data")
+                        return
+                    }
+                    
+                    let hashedChallenge = Data(SHA256.hash(data: challengeData))
+                      
                     // Perform the attestation with the challenge
-                    DCAppAttestService.shared.attestKey(keyId, clientDataHash: challenge) { attestation, error in
+                    DCAppAttestService.shared.attestKey(keyId, clientDataHash: hashedChallenge) { attestation, error in
                         guard error == nil else {
                             print("Error in app attestation: \(error!.localizedDescription)")
                             apiResponseHandler("Error in app attestation: \(error!.localizedDescription)")
@@ -82,9 +83,7 @@ struct AppAttestService {
         }.resume()
     }
 
-
-
-    static func sendAttestationToServer(attestation: Data, keyId: String, challenge: Data, apiResponseHandler: @escaping (String) -> Void) {
+    static func sendAttestationToServer(attestation: Data, keyId: String, challenge: String, apiResponseHandler: @escaping (String) -> Void) {
         guard let url = URL(string: "https://nativetoweb-spa.vercel.app/verify-attestation") else {
             print("Invalid backend URL")
             return
@@ -96,7 +95,7 @@ struct AppAttestService {
 
         let json: [String: Any] = [
             "keyId": keyId,
-            "attestation": attestation.base64EncodedString() ,
+            "attestation": attestation.base64EncodedString(),
             "challenge": challenge
         ]
 
@@ -107,7 +106,7 @@ struct AppAttestService {
 
         request.httpBody = jsonData
         
-        print("Json Data : \(jsonData)")
+        print("Json Data : \(json)")
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else {

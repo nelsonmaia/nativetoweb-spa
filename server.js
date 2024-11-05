@@ -26,6 +26,9 @@ const issuerId = '05eed3c0-d784-42b6-a078-58d67ce0ffc3';
 app.post("/verify-attestation", async (req, res) => {
   const { keyId, attestation, challenge } = req.body;
 
+  // log the requestesd parameters
+  console.log(`keyId: ${keyId}, attestation: ${attestation}, challenge: ${challenge}`)
+
   if (!keyId || !attestation || !challenge) {
       console.error("Invalid request: Missing keyId, attestation, or challenge");
       return res.status(400).json({ message: "Invalid request, missing keyId, attestation, or challenge" });
@@ -36,7 +39,7 @@ app.post("/verify-attestation", async (req, res) => {
 
       const result = verifyAttestation({
           attestation: Buffer.from(attestation, 'base64'),
-          challenge: Buffer.from(challenge, 'base64'), // Ensure the challenge is sent as base64
+          challenge: challenge,
           keyId: keyId,
           bundleIdentifier: bundleIdentifier,
           teamIdentifier: teamId,
