@@ -3,6 +3,7 @@ import WebKit
 import Auth0
 import SafariServices // Import SafariServices for SafariViewController
 import DeviceCheck
+import Foundation
 
 
 struct MainView: View {
@@ -15,7 +16,8 @@ struct MainView: View {
     @State var coId: String = "" // Stores co_id from the first response
     @State var showWebView: Bool = false // State to control WebView display
     @State var showSafariView: Bool = false // State to control SafariView display
-    @State var callbackURL: String = "https://customwebsso.vercel.app" // Stores login_ticket from the first response
+    @State var callbackURL: String = "https://customwebsso.vercel.app"
+    @State var auth0ClientAssertion = ""
 
     var body: some View {
         if let user = self.user {
@@ -24,8 +26,19 @@ struct MainView: View {
                 
                 Button("Attest App") {
                     AppAttestService.attestApp { response in
-                                            self.apiResponse1 = response
-                                        }
+                        self.apiResponse1 = response
+                        
+                        // Parse response to capture the AUth0 JTW for authetnication if it exists
+                        if let data = response.data(using: .utf8),
+                           let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                           let auth0Token = jsonResponse["auth0Token"] as? String {
+                            
+                            self.auth0ClientAssertion = auth0Token
+                            print("Captured auth0ClientAssertion: \(auth0Token)")
+                        } else {
+                            print("auth0Token not found in response")
+                        }
+                    }
                 }
 
                 // New button to exchange the ID token using the token exchange API
@@ -91,11 +104,12 @@ struct MainView: View {
         apiResponse2 = ""
         loginTicket = ""
         coId = ""
-        idToken = ""
+        auth0ClientAssertion = "js djaksndjkasndjkasd"
+        // idToken = ""
         print("Values have been reset.")
     }
 
-    // Step 1: Perform the initial authentication request
+    // DEPRECATED - INITIAL TESTING WITH CROSS
     func fetchInitialData() {
         let urlString = "https://nelson.jp.auth0.com/co/authenticate"
         print("Calling URL: \(urlString) at \(getCurrentTime())")
@@ -160,7 +174,6 @@ struct MainView: View {
         }.resume()
     }
 
-    // Step 2: Perform the authorize request using saved cookies and login_ticket
     func fetchAuthorizeData() {
         guard !loginTicket.isEmpty else {
             print("login_ticket not available")
@@ -203,7 +216,16 @@ struct MainView: View {
         }.resume()
     }
 
-    // Step 3: Token Exchange POST request using credentials.idToken
+    // Helper function to read values from Auth0.plist
+    func getAuth0ConfigurationValue(for key: String) -> String? {
+        if let path = Bundle.main.path(forResource: "Auth0", ofType: "plist"),
+           let dict = NSDictionary(contentsOfFile: path) as? [String: Any] {
+            return dict[key] as? String
+        }
+        return nil
+    }
+    
+   // PoC Token Exchange with custom Auth0 code
     func exchangeToken() {
         guard !idToken.isEmpty else {
             DispatchQueue.main.async {
@@ -213,9 +235,19 @@ struct MainView: View {
             print("ID token not available for token exchange.")
             return
         }
+        
+        guard let domain = getAuth0ConfigurationValue(for: "Domain") else {
+               print("Domain not found in Auth0.plist")
+               return
+           }
+        
+        guard let clientId = getAuth0ConfigurationValue(for: "ClientId") else {
+            print("ClientId not found in Auth0.plist")
+            return
+        }
 
-        let urlString = "https://n2w.test-aws-wise-mongoose-7953.auth0c.com/oauth/token"
-        print("Calling URL: \(urlString) at \(getCurrentTime())")
+        let urlString = "https://\(domain)/oauth/token"
+           print("Calling URL: \(urlString) at \(getCurrentTime())")
 
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
@@ -226,21 +258,28 @@ struct MainView: View {
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
+        
 //        let jsonData: [String: Any] = [
-//            "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-//            "subject_token_type": "http://acme.com/migration",
-//            "subject_token": idToken, // Use the idToken obtained from Auth0 login
-//            "client_id": "MWi2qtMbd9bQgZq1Ck7iPc6mWIJ8WMZ5",
-//            "audience": "https://nelson.api.com"
-////            "scope": "openid email profile"
-//        ]
+//                   "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+//                   "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
+//                   "subject_token": idToken,
+//                   "client_id": clientId,
+//                   "client_assertion" : auth0ClientAssertion,
+//                   "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+//               ]
         
         let jsonData: [String: Any] = [
-                   "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-                   "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
-                   "subject_token": idToken, // Use the idToken obtained from Auth0 login
-                   "client_id": "MWi2qtMbd9bQgZq1Ck7iPc6mWIJ8WMZ5",
-               ]
+            "grant_type": "password",
+            "client_id": clientId,
+            "username": "user@example.org",
+            "password": "Auth0Dem0!",
+            "realm": "Username-Password-Authentication",
+            "client_assertion" : auth0ClientAssertion,
+            "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+        ]
+        
+        
+        print("\(jsonData)")
 
         guard let httpBody = try? JSONSerialization.data(withJSONObject: jsonData, options: []) else {
             print("Invalid JSON data")
@@ -268,6 +307,7 @@ struct MainView: View {
             // Log the raw response for debugging
             if let rawResponse = String(data: data, encoding: .utf8) {
                 print("Raw Response: \(rawResponse)")
+                self.apiResponse1 = rawResponse
             }
 
             // Try to parse the JSON response to extract the access token

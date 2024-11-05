@@ -52,13 +52,13 @@ app.post("/verify-attestation", async (req, res) => {
           const token = jwt.sign({ jti: crypto.randomUUID,}, auth0PrivateKey, {
             expiresIn: '10m', 
             audience: 'https://nelson.jp.auth0.com/',
-            issuer: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+            issuer: "6AlelVCVUXlXozlThgtWp54GP8dOrnek",
             header: {
                 alg: 'RS256',
                 kid: "2WitOoEuiUeIkGaB_j6QqjWCqSepKODyX8mZkwkayL0",
                 typ: 'JWT'
             },
-            subject: "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+            subject: "6AlelVCVUXlXozlThgtWp54GP8dOrnek",
            
         });
 
