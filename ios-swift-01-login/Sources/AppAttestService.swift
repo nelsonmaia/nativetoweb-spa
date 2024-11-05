@@ -55,45 +55,34 @@ struct AppAttestService {
         }
     }
 
-    static func fetchChallenge(completion: @escaping (Data) -> Void) {
+    static func fetchChallenge(completion: @escaping (String) -> Void) {
         guard let url = URL(string: "https://nativetoweb-spa.vercel.app/get-challenge") else {
             print("Invalid backend URL")
             return
         }
 
         URLSession.shared.dataTask(with: url) { data, response, error in
-               guard let data = data, error == nil else {
-                   print("Error fetching challenge: \(error?.localizedDescription ?? "Unknown error")")
-                   return
-               }
-            
-            
-                print("Fetched Challenge Response0: \(data)")
+            guard let data = data, error == nil else {
+                print("Error fetching challenge: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
 
-               // Decode the JSON response
-               if let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                  let challengeString = jsonResponse["challenge"] as? String {
-                   print("Fetched Challenge (Base64): \(challengeString)")
-                   
-                   // Convert the Base64 challenge string into Data
-                   if let challengeData = Data(base64Encoded: challengeString) {
-                       
-                       // Hash the challenge using SHA256
-                       let hash = Data(SHA256.hash(data: challengeData))
-                       
-                       // Print the hash in Base64 to verify
-                       print("SHA256 Hash (Base64): \(hash.base64EncodedString())")
-                       
-                       // Call the completion handler with the hashed challenge
-                       completion(hash)
-                   } else {
-                       print("Failed to decode Base64 challenge")
-                   }
-               } else {
-                   print("Failed to parse JSON response")
-               }
-           }.resume()
+            // Parse the JSON response as-is
+            do {
+                if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let challenge = jsonResponse["challenge"] as? String {
+                    print("Fetched Challenge (UUID): \(challenge)")
+                    completion(challenge) // Pass the UUID directly to completion
+                } else {
+                    print("Failed to parse JSON response or missing 'challenge' key")
+                }
+            } catch {
+                print("JSON parsing error: \(error.localizedDescription)")
+            }
+        }.resume()
     }
+
+
 
     static func sendAttestationToServer(attestation: Data, keyId: String, challenge: Data, apiResponseHandler: @escaping (String) -> Void) {
         guard let url = URL(string: "https://nativetoweb-spa.vercel.app/verify-attestation") else {
