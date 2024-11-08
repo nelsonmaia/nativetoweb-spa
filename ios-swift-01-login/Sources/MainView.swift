@@ -341,6 +341,7 @@ struct MainView: View {
     func login() {
         Auth0
             .webAuth()
+//            .useEphemeralSession()
             .start { result in
                 switch result {
                 case .success(let credentials):
