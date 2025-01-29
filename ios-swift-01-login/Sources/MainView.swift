@@ -24,6 +24,12 @@ struct MainView: View {
             VStack {
                 ProfileView(user: user, apiResponse1: apiResponse1, apiResponse2: apiResponse2)
                 
+                Button("Get new access token") {
+                    Task {
+                           await getNewAccessTokenUsingAuth0SDK()
+                       }
+                }
+                
                 Button("Attest App") {
                     AppAttestService.attestApp { response in
                         self.apiResponse1 = response
@@ -95,6 +101,48 @@ struct MainView: View {
                 Button("Login", action: self.login)
             }
         }
+    }
+    
+    
+    func credentials() async throws -> Credentials {
+           let credentialsManager = CredentialsManager(authentication: Auth0.authentication())
+           
+           return try await withCheckedThrowingContinuation { continuation in
+               credentialsManager.credentials { result in
+                   switch result {
+                   case .success(let credentials):
+                       continuation.resume(returning: credentials)
+                       break
+
+                   case .failure(let reason):
+                       continuation.resume(throwing: reason)
+                       break
+                   }
+               }
+           }
+       }
+    
+    
+    
+    func getNewAccessTokenUsingAuth0SDK() async  {
+        
+        
+        do {
+            let credentials = try await credentials();
+            
+            print(credentials.accessToken)
+            print("Refresh token: \(credentials.refreshToken ?? "")");
+
+            
+            print("Refresh token: \(credentials.refreshToken ?? "")")
+            
+        } catch {
+               // Handle the error
+               print("Failed to renew access token: \(error.localizedDescription)")
+               self.apiResponse1 = "Error: \(error.localizedDescription)"
+           }
+            
+        
     }
 
     // Function to reset cookies and responses
@@ -260,12 +308,12 @@ struct MainView: View {
 
         
         let jsonData: [String: Any] = [
-                   "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-                   "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
-                   "subject_token": idToken,
-                   "client_id": "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
-                   "client_assertion" : auth0ClientAssertion,
-                   "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+                       "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                       "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
+                       "subject_token": idToken,
+                       "client_id": "6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh",
+                       "client_assertion" : auth0ClientAssertion,
+                       "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
                ]
         
 //        let jsonData: [String: Any] = [
@@ -339,15 +387,25 @@ struct MainView: View {
 
 
     func login() {
+        
+        let credentialsManager = CredentialsManager(authentication: Auth0.authentication())
+        
+       let crend2Manger = CredentialsManager(authentication: Auth0.authentication())
+        
         Auth0
             .webAuth()
-//            .useEphemeralSession()
+            .audience("https://nelson.api.com")
+            .scope("openid profile email offline_access")
+//            .provider(WebAuthentication.safariProvider())
             .start { result in
                 switch result {
                 case .success(let credentials):
                     self.user = User(from: credentials.idToken)
                     self.idToken = credentials.idToken // Store the ID token
-                    self.apiResponse1 = idToken;
+                    self.apiResponse1 = credentials.accessToken
+                    print("Refresh token: \(credentials.refreshToken ?? "")")
+                    let _ = credentialsManager.store(credentials: credentials)
+                    
                 case .failure(let error):
                     print("Failed with: \(error)")
                 }
@@ -355,6 +413,9 @@ struct MainView: View {
     }
 
     func logout() {
+        
+        let credentialsManager = CredentialsManager(authentication: Auth0.authentication())
+
         Auth0
             .webAuth()
             .clearSession { result in
@@ -362,6 +423,8 @@ struct MainView: View {
                 case .success:
                     self.user = nil
                     self.idToken = "" // Clear the ID token
+                    credentialsManager.clear() // Clear stored credentials
+                                print("Logged out and cleared credentials.")
                 case .failure(let error):
                     print("Failed with: \(error)")
                 }
