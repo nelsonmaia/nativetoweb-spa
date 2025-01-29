@@ -22,7 +22,7 @@ const login = async (targetUrl) => {
     console.log("logintoken", loginToken)
 
     if(loginToken){
-      options.authorizationParams.login_token = loginToken;
+      options.authorizationParams.session_token = loginToken;
     }
 
     if (targetUrl) {
@@ -139,11 +139,11 @@ window.onload = async () => {
     window.history.replaceState({}, document.title, "/");
   }
 
-  if(query.includes("login_token")){
+  if(query.includes("session_token")){
     const searchParams = new URLSearchParams(document.location.search)
-    const loginToken = searchParams.get("login_token");
+    const loginToken = searchParams.get("session_token");
     var lead = document.getElementById("leadtext")
-    lead.innerHTML = "login_token=" + loginToken;
+    lead.innerHTML = "session_token=" + loginToken;
     return login();
   }
 
