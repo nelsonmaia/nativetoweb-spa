@@ -19,7 +19,7 @@ const login = async (targetUrl) => {
     const searchParams = new URLSearchParams(document.location.search)
     const loginToken = searchParams.get("session_token");
 
-    console.log("logintoken", loginToken)
+    console.log("sessionToken", loginToken)
 
     if(loginToken){
       options.authorizationParams.session_token = loginToken;
