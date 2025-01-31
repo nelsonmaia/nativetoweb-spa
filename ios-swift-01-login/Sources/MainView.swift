@@ -18,11 +18,73 @@ struct MainView: View {
     @State var showSafariView: Bool = false // State to control SafariView display
     @State var callbackURL: String = "https://customwebsso.vercel.app"
     @State var auth0ClientAssertion = ""
+    @State private var webViewUrl: String? = nil
+    @State var ntwWebView: Bool = false // State to control WebView display
+
 
     var body: some View {
         if let user = self.user {
             VStack {
                 ProfileView(user: user, apiResponse1: apiResponse1, apiResponse2: apiResponse2)
+                
+                Button("NTW in System Browser") {
+                    NativeToWeb.openSystemBrowserWithSessionToken()
+                }
+                
+                Button("NTW in SafariViewController") {
+                    if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let rootViewController = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController {
+                        NativeToWeb.openSafariViewControllerWithSessionToken(from: rootViewController)
+                    }
+                }
+                
+                
+                
+//                Button("NTW WKWebView") {
+//                    Task {
+//                        if let url = await NativeToWeb.openWKWebViewWithSessionToken() {
+//                            print("📌 Received URL in Button: \(url)")
+//                            DispatchQueue.main.async {
+//                                webViewUrl = url
+//                                showWebView = true
+//                            }
+//                        } else {
+//                            print("❌ Failed to get session token.")
+//                        }
+//                    }
+//                }
+//
+//                .sheet(isPresented: $showWebView) {
+//                        Text("📌 Inside sheet: webViewUrl = \(webViewUrl ?? "nil")") // Debugging
+//
+//                    
+//                        if let urlString = webViewUrl {
+//                            WebView(urlString: urlString)
+//                        }else {
+//                            Text("❌ webViewUrl is nil")
+//                        }
+//                }
+                
+                Button("NTW WKWebView") {
+                    webViewUrl = "https://example.com" // Replace with your fixed URL
+                    
+                    Task{
+                        let url = await NativeToWeb.openWKWebViewWithSessionToken()
+                        webViewUrl = url
+                        ntwWebView = true
+                        print(webViewUrl ?? "❌ Failed to get session token.")
+                    }
+                    
+                }
+                .sheet(isPresented: $ntwWebView) {
+                    if let urlString = webViewUrl {
+                        WebView(urlString: urlString)
+                    } else {
+                        Text("❌ webViewUrl is nil")
+                    }
+                }
+
+                
                 
                 Button("Get new access token") {
                     Task {
@@ -316,17 +378,6 @@ struct MainView: View {
                        "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
                ]
         
-//        let jsonData: [String: Any] = [
-//            "grant_type": "password",
-//            "client_id": clientId,
-//            "username": "user@example.org",
-//            "password": "Auth0Dem0!",
-//            "realm": "Username-Password-Authentication",
-//            "client_assertion" : auth0ClientAssertion,
-//            "client_assertion_type" : "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-//        ]
-        
-        
         print("\(jsonData)")
 
         guard let httpBody = try? JSONSerialization.data(withJSONObject: jsonData, options: []) else {
@@ -447,31 +498,28 @@ struct MainView: View {
 // WebView Component to handle displaying a webpage with cookies
 struct WebView: UIViewRepresentable {
     let urlString: String
-//    let cookies: String
-    
+
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
-        if let url = URL(string: urlString) {
-            var request = URLRequest(url: url)
-            
-            // Set the cookies in the request headers
-            
-//                request.addValue(cookies, forHTTPHeaderField: "Cookie")
-            
-            
-            webView.load(request)
+        
+        // Print the URL before trying to load it
+        print("🌍 Loading WebView with URL: \(urlString)")
+
+        guard let url = URL(string: urlString) else {
+            print("❌ Invalid URL in WebView: \(urlString)")
+            return webView
         }
+
+        webView.load(URLRequest(url: url))
         return webView
     }
     
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        // Nothing to update here
-    }
-    
-
-
-
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
+
+
+
+
 
 // SafariView Component for opening URLs in Safari
 struct SafariView: UIViewControllerRepresentable {

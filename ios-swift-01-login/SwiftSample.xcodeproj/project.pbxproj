@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A46BB612D4BBF8200FE90BF /* NativeToWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A46BB602D4BBF7D00FE90BF /* NativeToWeb.swift */; };
+		4A46BB622D4BBF8200FE90BF /* NativeToWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A46BB602D4BBF7D00FE90BF /* NativeToWeb.swift */; };
 		4AA97E9E2CC1A90D00C616A2 /* AppAttestService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA97E9D2CC1A90800C616A2 /* AppAttestService.swift */; };
 		4AA97E9F2CC1A90D00C616A2 /* AppAttestService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA97E9D2CC1A90800C616A2 /* AppAttestService.swift */; };
 		5C5DBE83277210B400E19935 /* Auth0 in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5DBE82277210B400E19935 /* Auth0 */; };
@@ -66,6 +68,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4A46BB602D4BBF7D00FE90BF /* NativeToWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeToWeb.swift; sourceTree = "<group>"; };
 		4AA97E9D2CC1A90800C616A2 /* AppAttestService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAttestService.swift; sourceTree = "<group>"; };
 		5C5DBE87277212E000E19935 /* Auth0.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Auth0.plist; path = ../Auth0.plist; sourceTree = "<group>"; };
 		5C6537232772F5D90035759D /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -138,6 +141,7 @@
 		5C5DBE8A277217D800E19935 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4A46BB602D4BBF7D00FE90BF /* NativeToWeb.swift */,
 				4AA97E9D2CC1A90800C616A2 /* AppAttestService.swift */,
 				5C78D9BF2774093F000B4B71 /* Supporting Files */,
 				5CDD8856277102DA00052307 /* MainView.swift */,
@@ -528,6 +532,7 @@
 			files = (
 				5CDD8867277102DC00052307 /* MainView.swift in Sources */,
 				5C78D9C127740963000B4B71 /* Views.swift in Sources */,
+				4A46BB612D4BBF8200FE90BF /* NativeToWeb.swift in Sources */,
 				4AA97E9E2CC1A90D00C616A2 /* AppAttestService.swift in Sources */,
 				5C6537272772F5EE0035759D /* User.swift in Sources */,
 				5C6537242772F5D90035759D /* ProfileView.swift in Sources */,
@@ -541,6 +546,7 @@
 			files = (
 				5CDD8868277102DC00052307 /* MainView.swift in Sources */,
 				5C78D9C227740975000B4B71 /* Views.swift in Sources */,
+				4A46BB622D4BBF8200FE90BF /* NativeToWeb.swift in Sources */,
 				4AA97E9F2CC1A90D00C616A2 /* AppAttestService.swift in Sources */,
 				5C6537282772F5EE0035759D /* User.swift in Sources */,
 				5C6537252772F5D90035759D /* ProfileView.swift in Sources */,

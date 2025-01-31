@@ -62,8 +62,8 @@ const fetchAuthConfig = () => fetch("/auth_config.json");
 const configureClient = async () => {
   // const response = await fetchAuthConfig();
   const config = {
-    "domain": "nelson.jp.auth0.com",
-    "clientId": "6AlelVCVUXlXozlThgtWp54GP8dOrnek"
+    "domain": "nelson.uk.auth0.com",
+    "clientId": "hQmXI8WqW9QXh4TeTP8J2PSEj2827tW6"
   };
   auth0Client = await auth0.createAuth0Client({
     domain: config.domain,
@@ -102,7 +102,7 @@ window.onload = async () => {
   bodyElement.addEventListener("click", (e) => {
     if (isRouteLink(e.target)) {
       const url = e.target.getAttribute("href");
-
+ 
       if (showContentFromUrl(url)) {
         e.preventDefault();
         window.history.pushState({ url }, {}, url);
@@ -141,6 +141,7 @@ window.onload = async () => {
     window.history.replaceState({}, document.title, "/");
   }
 
+  // in case we receive the Session Token in the URL, we will automatically redirect to the Login
   if(query.includes("session_token")){
     const searchParams = new URLSearchParams(document.location.search)
     const loginToken = searchParams.get("session_token");
