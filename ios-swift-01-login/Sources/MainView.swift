@@ -72,7 +72,7 @@ struct MainView: View {
                             print("📌 Received URL: \(url)")
                             DispatchQueue.main.async {
                                 webViewUrl = url
-                                sessionToken = (url.components(separatedBy: "session_token=").last != nil) // Extract token
+                                //sessionToken = (url.components(separatedBy: "session_token=").last != nil) // Extract token
                                 ntwWebView = true
                             }
                         } else {
@@ -80,13 +80,13 @@ struct MainView: View {
                         }
                     }
                 }
-                .sheet(isPresented: $ntwWebView) {
-                    if let urlString = webViewUrl, let token = sessionToken {
-                        WebView(urlString: urlString, sessionToken: token)
-                    } else {
-                        Text("❌ webViewUrl or sessionToken is nil")
-                    }
-                }
+//                .sheet(isPresented: $ntwWebView) {
+//                    if let urlString = webViewUrl, let token = sessionToken {
+//                        WebView(urlString: urlString, sessionToken: token)
+//                    } else {
+//                        Text("❌ webViewUrl or sessionToken is nil")
+//                    }
+//                }
 
                 
                 
@@ -126,7 +126,7 @@ struct MainView: View {
 //                    WebView(urlString: "https://nelson.jp.auth0.com/authorize?response_mode=fragment&response_type=token%20id_token&client_id=6XCtoG9akcdiZf54myfQGv9dTDoqm1Uh&redirect_uri=https://jwt.io/%23&audience=https://nelson.api.com&scope=email%20profile%20openid%20offline_access%20read:test&state=somestatevalue&nonce=nonce&realm=Username-Password-Authentication&login_ticket=\(loginTicket)", cookies: cookies)
 //                }
                 .sheet(isPresented: $showWebView) {
-                    WebView(urlString: "https://nativetoweb-spa.vercel.app/profile?v=1&login_token=\(loginTicket)")
+                   // WebView(urlString: "https://nativetoweb-spa.vercel.app/profile?v=1&login_token=\(loginTicket)")
                 }
 
                 // New button to open the same URL in SafariViewController
