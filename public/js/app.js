@@ -62,8 +62,8 @@ const fetchAuthConfig = () => fetch("/auth_config.json");
 const configureClient = async () => {
   // const response = await fetchAuthConfig();
   const config = {
-    "domain": "nelson.uk.auth0.com",
-    "clientId": "hQmXI8WqW9QXh4TeTP8J2PSEj2827tW6"
+    "domain": "testing.test-aws-thick-panther-1344.auth0c.com",
+    "clientId": "yqMfR1Hs0RxwjD3ZEsso9AgLem7nlH3N"
   };
   auth0Client = await auth0.createAuth0Client({
     domain: config.domain,

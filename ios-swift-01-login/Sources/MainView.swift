@@ -15,6 +15,7 @@ struct MainView: View {
     @State var loginTicket: String = "" // Stores login_ticket from the first response
     @State var coId: String = "" // Stores co_id from the first response
     @State var showWebView: Bool = false // State to control WebView display
+    @State var sessionToken: String = "" 
     @State var showSafariView: Bool = false // State to control SafariView display
     @State var callbackURL: String = "https://customwebsso.vercel.app"
     @State var auth0ClientAssertion = ""
@@ -66,21 +67,24 @@ struct MainView: View {
 //                }
                 
                 Button("NTW WKWebView") {
-                    webViewUrl = "https://example.com" // Replace with your fixed URL
-                    
-                    Task{
-                        let url = await NativeToWeb.openWKWebViewWithSessionToken()
-                        webViewUrl = url
-                        ntwWebView = true
-                        print(webViewUrl ?? "❌ Failed to get session token.")
+                    Task {
+                        if let url = await NativeToWeb.openWKWebViewWithSessionToken() {
+                            print("📌 Received URL: \(url)")
+                            DispatchQueue.main.async {
+                                webViewUrl = url
+                                sessionToken = (url.components(separatedBy: "session_token=").last != nil) // Extract token
+                                ntwWebView = true
+                            }
+                        } else {
+                            print("❌ Failed to get session token.")
+                        }
                     }
-                    
                 }
                 .sheet(isPresented: $ntwWebView) {
-                    if let urlString = webViewUrl {
-                        WebView(urlString: urlString)
+                    if let urlString = webViewUrl, let token = sessionToken {
+                        WebView(urlString: urlString, sessionToken: token)
                     } else {
-                        Text("❌ webViewUrl is nil")
+                        Text("❌ webViewUrl or sessionToken is nil")
                     }
                 }
 
@@ -498,23 +502,40 @@ struct MainView: View {
 // WebView Component to handle displaying a webpage with cookies
 struct WebView: UIViewRepresentable {
     let urlString: String
+    let sessionToken: String? // Inject session token from outside
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
-        
-        // Print the URL before trying to load it
-        print("🌍 Loading WebView with URL: \(urlString)")
 
-        guard let url = URL(string: urlString) else {
-            print("❌ Invalid URL in WebView: \(urlString)")
-            return webView
+        // Inject cookie before loading the URL
+        if let sessionToken = sessionToken {
+            let cookie = HTTPCookie(properties: [
+                .domain: "jp.auth0.com",
+                .path: "/",
+                .name: "session_token",
+                .value: sessionToken,
+                .secure: true,
+                .expires: Date(timeIntervalSinceNow: 3600)
+            ])
+            
+            print("Cookies to inject", cookie)
+
+            if let cookie = cookie {
+                webView.configuration.websiteDataStore.httpCookieStore.setCookie(cookie)
+            }
         }
 
-        webView.load(URLRequest(url: url))
+        // Load the requested URL
+        if let url = URL(string: urlString) {
+            webView.load(URLRequest(url: url))
+        }
+
         return webView
     }
-    
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        // No updates needed
+    }
 }
 
 
