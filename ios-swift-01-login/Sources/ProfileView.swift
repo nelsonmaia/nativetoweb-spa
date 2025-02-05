@@ -19,82 +19,86 @@ struct ProfileView: View {
                 ProfileCell(key: "Email", value: user.email)
                 ProfileCell(key: "Email Verified?", value: user.emailVerified)
                 ProfileCell(key: "Updated at", value: user.updatedAt)
+                
             }
             
-            // First API Response Section
-            Section(header: Text("API Response 1")) {
-                Text(apiResponse1.isEmpty ? "No Data" : apiResponse1)
-                    .font(.body)
-                    .foregroundColor(.gray)
-            }
+      
+            
+            
+//            // First API Response Section
+//            Section(header: Text("API Response 1")) {
+//                Text(apiResponse1.isEmpty ? "No Data" : apiResponse1)
+//                    .font(.body)
+//                    .foregroundColor(.gray)
+//            }
 
             // Second API Response Section (showing only Access Token and ID Token)
-            Section(header: Text("Access Token and ID Token")) {
-                Text("Access Token")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                Text(extractAccessToken(from: apiResponse2))
-                    .font(.body)
-                    .foregroundColor(.blue)
-                    .padding()
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(8)
-                    .contextMenu {
-                        Button(action: {
-                            UIPasteboard.general.string = extractAccessToken(from: apiResponse2)
-                        }) {
-                            Text("Copy Access Token")
-                            Image(systemName: "doc.on.doc")
-                        }
-                    }
-
-                Text("ID Token")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                Text(extractIdToken(from: apiResponse2))
-                    .font(.body)
-                    .foregroundColor(.blue)
-                    .padding()
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(8)
-                    .contextMenu {
-                        Button(action: {
-                            UIPasteboard.general.string = extractIdToken(from: apiResponse2)
-                        }) {
-                            Text("Copy ID Token")
-                            Image(systemName: "doc.on.doc")
-                        }
-                    }
-
-                // Decode Button
-                Button(action: decodeTokens) {
-                    Text("Decode Tokens")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-            }
+//            Section(header: Text("Access Token and ID Token")) {
+//                Text("Access Token")
+//                    .font(.headline)
+//                    .foregroundColor(.black)
+//                Text(extractAccessToken(from: apiResponse2))
+//                    .font(.body)
+//                    .foregroundColor(.blue)
+//                    .padding()
+//                    .background(Color(UIColor.secondarySystemBackground))
+//                    .cornerRadius(8)
+//                    .contextMenu {
+//                        Button(action: {
+//                            UIPasteboard.general.string = extractAccessToken(from: apiResponse2)
+//                        }) {
+//                            Text("Copy Access Token")
+//                            Image(systemName: "doc.on.doc")
+//                        }
+//                    }
+//
+//                Text("ID Token")
+//                    .font(.headline)
+//                    .foregroundColor(.black)
+//                Text(extractIdToken(from: apiResponse2))
+//                    .font(.body)
+//                    .foregroundColor(.blue)
+//                    .padding()
+//                    .background(Color(UIColor.secondarySystemBackground))
+//                    .cornerRadius(8)
+//                    .contextMenu {
+//                        Button(action: {
+//                            UIPasteboard.general.string = extractIdToken(from: apiResponse2)
+//                        }) {
+//                            Text("Copy ID Token")
+//                            Image(systemName: "doc.on.doc")
+//                        }
+//                    }
+//
+//                // Decode Button
+//                Button(action: decodeTokens) {
+//                    Text("Decode Tokens")
+//                        .font(.headline)
+//                        .padding()
+//                        .frame(maxWidth: .infinity)
+//                        .background(Color.blue)
+//                        .foregroundColor(.white)
+//                        .cornerRadius(8)
+//                }
+//            }
 
             // Decoded Access Token Claims
-            if !decodedAccessTokenClaims.isEmpty {
-                Section(header: Text("Decoded Access Token - Claims")) {
-                    ForEach(decodedAccessTokenClaims.keys.sorted(), id: \.self) { key in
-                        ProfileCell(key: key, value: decodedAccessTokenClaims[key] ?? "")
-                    }
-                }
-            }
+//            if !decodedAccessTokenClaims.isEmpty {
+//                Section(header: Text("Decoded Access Token - Claims")) {
+//                    ForEach(decodedAccessTokenClaims.keys.sorted(), id: \.self) { key in
+//                        ProfileCell(key: key, value: decodedAccessTokenClaims[key] ?? "")
+//                    }
+//                }
+//            }
 
             // Decoded ID Token Claims
-            if !decodedIdTokenClaims.isEmpty {
-                Section(header: Text("Decoded ID Token - Claims")) {
-                    ForEach(decodedIdTokenClaims.keys.sorted(), id: \.self) { key in
-                        ProfileCell(key: key, value: decodedIdTokenClaims[key] ?? "")
-                    }
-                }
-            }
+//            if !decodedIdTokenClaims.isEmpty {
+//                Section(header: Text("Decoded ID Token - Claims")) {
+//                    ForEach(decodedIdTokenClaims.keys.sorted(), id: \.self) { key in
+//                        ProfileCell(key: key, value: decodedIdTokenClaims[key] ?? "")
+//                    }
+//                }
+//            }
         }
     }
     

@@ -55,6 +55,13 @@ img {
   }
 }
 
+@media (min-width: 768px) {
+  .mobile-visible{
+    display: none;
+  }
+}
+
+
 /* Profile card adjustments */
 @media (max-width: 768px) {
   .profile-header {

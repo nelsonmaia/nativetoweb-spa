@@ -11,7 +11,7 @@ struct HeroView: View {
             .frame(width: 25, height: 28, alignment: .center)
             .padding(.top, 8)
         VStack(alignment: .leading, spacing: -32) {
-            Text("Web SSO")
+            Text("Native to Web SSO")
                 .tracking(self.tracking)
                 .foregroundStyle(
                     .linearGradient(
@@ -19,12 +19,13 @@ struct HeroView: View {
                       startPoint: .topLeading,
                       endPoint: .bottomTrailing
                     ))
-            Text("Prod")
+//            Text("SSO")
+//                .tracking(self.tracking)
+//                .foregroundColor(.black)
+            Text("Beta")
                 .tracking(self.tracking)
                 .foregroundColor(.black)
-            Text("POC")
-                .tracking(self.tracking)
-                .foregroundColor(.black)
+                .padding(.top, 25)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .font(.custom("SpaceGrotesk-Medium", size: 80))

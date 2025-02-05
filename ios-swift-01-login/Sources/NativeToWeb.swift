@@ -86,28 +86,9 @@ struct NativeToWeb {
             print("Failed to obtain session token")
             return nil
         }
+        print("Returning session token:", sessionToken)
 
-        print("Using session token:", sessionToken)
-        
-        let targetUrl = "https://nativetoweb-spa.vercel.app?session_token=\(sessionToken)"
-
-//        // Inject the session token as a cookie
-//        let cookieProperties: [HTTPCookiePropertyKey: Any] = [
-//            .domain: "jp.auth0.com",
-//            .path: "/",
-//            .name: "session_token",
-//            .value: sessionToken,
-//            .expires: Date(timeIntervalSinceNow: 3600)
-//        ]
-//
-//        if let cookie = HTTPCookie(properties: cookieProperties) {
-//            print("Cookie created successfully: \(cookie)")
-//            await WKWebsiteDataStore.default().httpCookieStore.setCookie(cookie)
-//        } else {
-//            print("Failed to create cookie with properties: \(cookieProperties)")
-//        }
-
-        return targetUrl
+        return sessionToken
     }
 
 
@@ -121,7 +102,7 @@ struct NativeToWeb {
                    return
                }
 
-               let targetUrlString = "https://nativetoweb-spa.vercel.app?session_token=\(sessionToken)"
+               let targetUrlString = "https://nativetoweb-spa.vercel.app/profile?session_token=\(sessionToken)"
 
                guard let url = URL(string: targetUrlString) else {
                    print("Invalid URL")
@@ -145,7 +126,9 @@ struct NativeToWeb {
                     return
                 }
 
-                let targetUrlString = "https://nativetoweb-spa.vercel.app?session_token=\(sessionToken)"
+                let targetUrlString = "https://nativetoweb-spa.vercel.app/profile?session_token=\(sessionToken)"
+                
+                print("targetUrlString SafariViewController", targetUrlString)
 
                 guard let url = URL(string: targetUrlString) else {
                     print("Invalid URL")

@@ -36,6 +36,40 @@ const login = async (targetUrl) => {
 };
 
 /**
+ * Starts the authentication flow
+ */
+const sessionTokenlogin = async (targetUrl) => {
+  try {
+    console.log("Logging in", targetUrl);
+
+    const options = {
+      authorizationParams: {
+        redirect_uri: window.location.origin
+      }
+    };
+
+    console.log(document.location.search);
+
+    const searchParams = new URLSearchParams(document.location.search)
+    const loginToken = searchParams.get("session_token");
+
+    console.log("sessionToken", loginToken)
+
+    if(loginToken){
+      options.authorizationParams.session_token = loginToken;
+    }
+
+    if (targetUrl) {
+      options.appState = { targetUrl };
+    }
+
+    await auth0Client.loginWithRedirect(options);
+  } catch (err) {
+    console.log("Log in failed", err);
+  }
+};
+
+/**
  * Executes the logout flow
  */
 const logout = async () => {
@@ -61,9 +95,13 @@ const fetchAuthConfig = () => fetch("/auth_config.json");
  */
 const configureClient = async () => {
   // const response = await fetchAuthConfig();
+  // const config = {
+  //   "domain": "testing.test-aws-thick-panther-1344.auth0c.com",
+  //   "clientId": "yqMfR1Hs0RxwjD3ZEsso9AgLem7nlH3N"
+  // };
   const config = {
-    "domain": "testing.test-aws-thick-panther-1344.auth0c.com",
-    "clientId": "yqMfR1Hs0RxwjD3ZEsso9AgLem7nlH3N"
+    "domain": "nelson.uk.auth0.com",
+    "clientId": "qirYVHCWqwtrTlB6cLBmTazD7oa2cHiq"
   };
   auth0Client = await auth0.createAuth0Client({
     domain: config.domain,
