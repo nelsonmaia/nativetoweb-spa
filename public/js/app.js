@@ -101,7 +101,7 @@ const configureClient = async () => {
   // };
   const config = {
     "domain": "nelson.uk.auth0.com",
-    "clientId": "qirYVHCWqwtrTlB6cLBmTazD7oa2cHiq"
+    "clientId": "hQmXI8WqW9QXh4TeTP8J2PSEj2827tW6"
   };
   auth0Client = await auth0.createAuth0Client({
     domain: config.domain,
