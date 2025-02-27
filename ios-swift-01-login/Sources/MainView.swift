@@ -21,40 +21,40 @@ struct MainView: View {
     @State private var webViewUrl: String? = nil
     @State var ntwWebView: Bool = false  // State to control WebView display
     @State var ntwEnabled: Bool = false
-
+    
     var body: some View {
         if let user = self.user {
             VStack {
                 ProfileView(
                     user: user, apiResponse1: apiResponse1,
                     apiResponse2: apiResponse2)
-
+                
                 //                Button("My Web Application ") {
                 //                    NativeToWeb.openSystemBrowserWithSessionToken()
                 //                }
-
+                
                 Section(header: Text("Native to Web SSO")) {
-
+                    
                     HStack {
-                                Spacer()
-                                Toggle("Enable NTW SSO", isOn: $ntwEnabled)
-                                    .labelsHidden() // Hides default label
-                                    .toggleStyle(SwitchToggleStyle(tint: .blue)) // Custom toggle style
-                                    .padding(.vertical, 5) // Adjust spacing
-                                Text("Enable")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                            }
-
+                        Spacer()
+                        Toggle("Enable NTW SSO", isOn: $ntwEnabled)
+                            .labelsHidden() // Hides default label
+                            .toggleStyle(SwitchToggleStyle(tint: .blue)) // Custom toggle style
+                            .padding(.vertical, 5) // Adjust spacing
+                        Text("Enable")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                    }
+                    
                     Button("View My Rewards Website") {
                         if ntwEnabled {
                             // NTW SSO enabled: Retrieve session token and open SafariViewController
                             if let scene = UIApplication.shared.connectedScenes
                                 .first as? UIWindowScene,
-                                let rootViewController = scene.windows.first(
-                                    where: { $0.isKeyWindow })?
-                                    .rootViewController
+                               let rootViewController = scene.windows.first(
+                                where: { $0.isKeyWindow })?
+                                .rootViewController
                             {
                                 NativeToWeb
                                     .openSafariViewControllerWithSessionToken(
@@ -63,16 +63,16 @@ struct MainView: View {
                         } else {
                             // NTW SSO disabled: Open the same SafariViewController without session token
                             let targetUrlString =
-                                "https://nativetoweb-spa.vercel.app/profile"
+                            "https://nativetoweb-spa.vercel.app/profile"
                             if let url = URL(string: targetUrlString),
-                                let scene = UIApplication.shared.connectedScenes
-                                    .first as? UIWindowScene,
-                                let rootViewController = scene.windows.first(
-                                    where: { $0.isKeyWindow })?
-                                    .rootViewController
+                               let scene = UIApplication.shared.connectedScenes
+                                .first as? UIWindowScene,
+                               let rootViewController = scene.windows.first(
+                                where: { $0.isKeyWindow })?
+                                .rootViewController
                             {
                                 let safariViewController =
-                                    SFSafariViewController(url: url)
+                                SFSafariViewController(url: url)
                                 rootViewController.present(
                                     safariViewController, animated: true,
                                     completion: nil)
@@ -81,26 +81,26 @@ struct MainView: View {
                     }
                     
                     Button("Get Session Token") {
-                            Task {
-                                if let token = await NativeToWeb.openWKWebViewWithSessionToken() {
-                                    print("📌 Retrieved Session Token: \(token)")
-                                    webViewUrl = "https://nativetoweb-spa.vercel.app/profile"
-                                    DispatchQueue.main.async {
-                                        sessionToken = token
-                                    }
-                                } else {
-                                    print("❌ Failed to retrieve session token.")
+                        Task {
+                            if let token = await NativeToWeb.openWKWebViewWithSessionToken() {
+                                print("📌 Retrieved Session Token: \(token)")
+                                webViewUrl = "https://nativetoweb-spa.vercel.app/profile"
+                                DispatchQueue.main.async {
+                                    sessionToken = token
                                 }
+                            } else {
+                                print("❌ Failed to retrieve session token.")
                             }
                         }
+                    }
                     
                     Button("Open WebView with Cookie") {
                         Task {
                             if let token = sessionToken, !token.isEmpty {
                                 print("📌 Using existing session token: \(token)")
                                 
-                                    webViewUrl = "https://nativetoweb-spa.vercel.app/profile"
-                                    showWebView = true
+                                webViewUrl = "https://nativetoweb-spa.vercel.app/profile"
+                                showWebView = true
                                 
                             } else {
                                 print("🔄 Retrieving new session token...")
@@ -117,31 +117,31 @@ struct MainView: View {
                             }
                         }
                     }
-
-                       
-                       // WebView Sheet
-                       .sheet(isPresented: $showWebView) {
-                           
-                           if let urlString = webViewUrl, let token = sessionToken {
-                               WebView(urlString: urlString, sessionToken: token)
-                           } else {
-                               Text("❌ webViewUrl or sessionToken is nil")
-                           }
-                       }
+                    
+                    
+                    // WebView Sheet
+                    .sheet(isPresented: $showWebView) {
                         
-                        // Display the Retrieved Session Token
-                        if let token = sessionToken, !token.isEmpty {
-                            Text("Session Token: \(token)")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                                .padding(.top, 5)
-                                .lineLimit(1)
-                                .truncationMode(.middle) // Avoids UI breaking with long tokens
+                        if let urlString = webViewUrl, let token = sessionToken {
+                            WebView(urlString: urlString, sessionToken: token)
+                        } else {
+                            Text("❌ webViewUrl or sessionToken is nil")
                         }
+                    }
+                    
+                    // Display the Retrieved Session Token
+                    if let token = sessionToken, !token.isEmpty {
+                        Text("Session Token: \(token)")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .padding(.top, 5)
+                            .lineLimit(1)
+                            .truncationMode(.middle) // Avoids UI breaking with long tokens
+                    }
                 }
-
-               
-
+                
+                
+                
                 Button("Logout", action: self.logout)
             }
         } else {
@@ -151,21 +151,21 @@ struct MainView: View {
             }
         }
     }
-
-   
+    
+    
     func login() {
-
+        
         let credentialsManager = CredentialsManager(
             authentication: Auth0.authentication())
-
+        
         let crend2Manger = CredentialsManager(
             authentication: Auth0.authentication())
-
+        
         Auth0
             .webAuth()
             .audience("https://nelson.api.com")
             .scope("openid profile email offline_access")
-            //            .provider(WebAuthentication.safariProvider())
+        //            .provider(WebAuthentication.safariProvider())
             .start { result in
                 switch result {
                 case .success(let credentials):
@@ -174,18 +174,18 @@ struct MainView: View {
                     self.apiResponse1 = credentials.accessToken
                     print("Refresh token: \(credentials.refreshToken ?? "")")
                     let _ = credentialsManager.store(credentials: credentials)
-
+                    
                 case .failure(let error):
                     print("Failed with: \(error)")
                 }
             }
     }
-
+    
     func logout() {
-
+        
         let credentialsManager = CredentialsManager(
             authentication: Auth0.authentication())
-
+        
         Auth0
             .webAuth()
             .clearSession { result in
@@ -200,8 +200,10 @@ struct MainView: View {
                 }
             }
     }
-
-  
+    
+    
+    
+    
 }
 
 // WebView Component to handle displaying a webpage with cookies
@@ -211,11 +213,14 @@ struct WebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
+        
+        let domain = NativeToWeb.getAuth0ConfigurationValue(for: "Domain")
+        
 
         // Inject cookie before loading the URL
         if let sessionToken = sessionToken {
             let cookie = HTTPCookie(properties: [
-                    .domain: "testing.test-aws-thick-panther-1344.auth0c.com",
+                    .domain: "nelson.uk.auth0.com",
                     .path: "/",
                     .name: "session_token",
                     .value: sessionToken,
@@ -243,6 +248,7 @@ struct WebView: UIViewRepresentable {
         // No updates needed
     }
 }
+
 
 // SafariView Component for opening URLs in Safari
 struct SafariView: UIViewControllerRepresentable {

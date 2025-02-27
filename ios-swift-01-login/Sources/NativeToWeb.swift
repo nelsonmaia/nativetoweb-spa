@@ -150,7 +150,7 @@ struct NativeToWeb {
     /// Retrieves Auth0 configuration values from the Auth0.plist file.
     /// - Parameter key: The key to retrieve.
     /// - Returns: The corresponding value as a String or nil if missing.
-    private static func getAuth0ConfigurationValue(for key: String) -> String? {
+    public static func getAuth0ConfigurationValue(for key: String) -> String? {
         if let path = Bundle.main.path(forResource: "Auth0", ofType: "plist"),
            let dict = NSDictionary(contentsOfFile: path) as? [String: Any] {
             return dict[key] as? String
